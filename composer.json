@@ -1,0 +1,28 @@
+{
+    "require-dev": {
+        "munablamu/db-seeder": "*",
+        "panique/php-sass": "1.0",
+        "phpunit/phpunit":"9.5.*",
+        "symfony/var-dumper": "5.2.*"
+    },
+
+    "require": {
+      "php": "8.0.*",
+      "davedevelopment/phpmig": "1.7.*",
+      "heroku/heroku-buildpack-php":"*",
+      "pimple/pimple": "3.3.*"
+    },
+
+    "repositories": [
+      {
+        "type":"vcs",
+        "url":"https://github.com/munablamu/db-seeder.git"
+      }
+    ],
+
+    "autoload": {
+      "psr-4": {
+        "":["core/", "app/controllers/", "app/models/", "app/views/", "config/"]
+      }
+    }
+}
