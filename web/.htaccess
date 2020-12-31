@@ -29,6 +29,14 @@ Header always append X-Frame-Options SAMEORIGIN
 # PHP config
 <IfModule mod_php.c>
   SetEnv PHP_TYPE 'module'
+  # PHP
+  php_value upload_max_filesize "10M"
+  # Date
+  php_value date.timezone "Asia/Tokyo"
+  # mbstring
+  php_value mbstring.language "Japanese"
+  php_value mbstring.internal_encoding "UTF-8"
+  php_value mbstring.encoding_translation off
   # Secure Cookie
   # Session id length & bits
   php_value session.sid_length "48"
