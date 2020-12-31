@@ -12,6 +12,6 @@ switch ( getenv('PHP_TYPE') ) {
     $debug = false;
     break;
 }
-phpinfo(); exit();
+
 $app = new WebApplication($debug);
 $app->run();
