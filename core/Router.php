@@ -29,99 +29,18 @@ class Router
   {
     $routes = array();
 
+    $this->explodeRestAction($definitions);
+    $this->compileHTTPRequestMethod($definitions);
+
+
     foreach ( $definitions as $url => $params ) {
-      $tokens = explode('/', ltrim($url, '/'));
+      $tokens = $this->explodeTokens($url);
 
-      $token = end($tokens);
-      if ( 0 === strpos($token, '%') ) {
-        if ( substr($token, 0, 5) === '%rest' ) {
-          if ( $token === '%rest' ) {
-            $token .= '[index,show,new,create,edit,update,destroy]';
-          } elseif ( substr($token, 0, 6) === '%rest[' ) {
-            $token = str_replace('[', '[index,show,new,create,edit,update,destroy,', $token);
-          }
-        }
+      $this->compileDynamicToken($tokens);
 
-        $token = strstr(substr(strstr($token, '['), 1), ']', true);
-        $actions = explode(',', $token);
+      $pattern = $this->implodeTokens($tokens);
 
-        foreach ( $actions as $action ) {
-          $action = trim($action);
-
-          switch ($action) {
-            case 'index':
-              $rest_token = '@get';
-              break;
-            case 'show':
-              $rest_token = ':id@get';
-              break;
-            case 'new':
-              $rest_token = 'new@get';
-              break;
-            case 'create':
-              $rest_token = 'new@post';
-              break;
-            case 'edit':
-              $rest_token = ':id/edit@get';
-              break;
-            case 'update':
-              $rest_token = ':id@patch';
-              break;
-            case 'destroy':
-              $rest_token = ':id@delete';
-              break;
-            default:
-              if ( strpos($action, '@') === false ) {
-                $rest_token = $action . '@get';
-              } else {
-                $rest_token = $action;
-              }
-              break;
-          }
-
-          $params['action'] = $action;
-
-          $_tokens = $tokens;
-          $_tokens[count($_tokens)-1] = $rest_token;
-          $_url = '/' . implode('/', $_tokens);
-          $definitions[$_url] = $params;
-        }
-        unset($action);
-
-        unset($definitions[$url]);
-      }
-    }
-    unset($url); unset($params);
-
-    foreach ( $definitions as $url => $_params ) {
-      $tokens = explode('/', ltrim($url, '/'));
-
-      foreach ( $tokens as $i => $token ) {
-        if ( 0 === strpos($token, ':') ) {
-          $name  = substr($token, 1);
-          $token = '(?P<' . $name . '>[^/]+)';
-        }
-        $tokens[$i] = $token;
-      }
-      unset($i); unset($token);
-
-      // HTTP request method
-      $end_token = end($tokens);
-      if ( false === strpos($end_token, '@') ) {
-        $end_token .= '@get';
-      }
-      $end_token = str_replace('@', '/@', $end_token);
-      $tokens[count($tokens)-1] = $end_token;
-
-      $pattern = '/' . implode('/', $tokens);
-
-      $params = array();
-      foreach ( $_params as $key => $value ) {
-        $params['_' . $key] = $value;
-      }
-      unset($key); unset($value);
-
-      $routes[$pattern] = $params;
+      $routes[$pattern] = $this->setRouteParams($params);
     }
     unset($url, $params);
 
@@ -152,5 +71,169 @@ class Router
     unset($pattern); unset($params);
 
     return false;
+  }
+
+  /**
+   * undocumented function
+   *
+   * @param  array &$definitions
+   * @return void
+   */
+  protected function explodeRestAction(&$definitions)
+  {
+    foreach ( $definitions as $url => $params ) {
+      $tokens = $this->explodeTokens($url);
+
+      $token = end($tokens);
+      if ( 0 === strpos($token, '%') ) {
+        if ( substr($token, 0, 5) === '%rest' ) {
+          if ( $token === '%rest' ) {
+            $token .= '[index,show,new,create,edit,update,destroy]';
+          } elseif ( substr($token, 0, 6) === '%rest[' ) {
+            $token = str_replace('[', '[index,show,new,create,edit,update,destroy,', $token);
+          }
+        }
+
+        $token = strstr(substr(strstr($token, '['), 1), ']', true);
+        $actions = explode(',', $token);
+
+        foreach ( $actions as $action ) {
+          $action = trim($action);
+          $tokens[count($tokens)-1] = $this->getEndToken($action);
+          $params['action'] = $action;
+          $_url = $this->implodeTokens($tokens);
+          $definitions[$_url] = $params;
+        }
+        unset($action);
+
+        unset($definitions[$url]);
+      }
+
+    }
+    unset($url); unset($params);
+  }
+
+  /**
+   * undocumented function
+   *
+   * @param  array &$tokens
+   * @return void
+   */
+  protected function compileDynamicToken(&$tokens)
+  {
+    foreach ( $tokens as $i => $token ) {
+      if ( 0 === strpos($token, ':') ) {
+        $name  = substr($token, 1);
+        $token = '(?P<' . $name . '>[^/]+)';
+      }
+      $tokens[$i] = $token;
+    }
+    unset($i); unset($token);
+  }
+
+  /**
+   * undocumented function
+   *
+   * @param  array &$definitions
+   * @return void
+   */
+  protected function compileHTTPRequestMethod(&$definitions)
+  {
+    $params_array = array_values($definitions);
+    $url_array = array();
+
+    foreach ( $definitions as $url => $params ) {
+      // HTTP request method
+      if ( false === strpos($url, '@') ) {
+        $url = $url . '@get';
+      }
+      $url_array[] = str_replace('@', '/@', $url);
+    }
+
+    $definitions = array_combine($url_array, $params_array);
+  }
+
+  /**
+   * undocumented function
+   *
+   * @param  array $params
+   * @return array
+   */
+  protected function setRouteParams($params)
+  {
+    $_params = array();
+    foreach ( $params as $key => $value ) {
+      $_params['_' . $key] = $value;
+    }
+    unset($key); unset($value);
+
+    return $_params;
+  }
+
+  /**
+   * undocumented function
+   *
+   * @param  string $action
+   * @return string
+   */
+  protected function getEndToken($action)
+  {
+    switch ($action) {
+      case 'index':
+        $end_token = '@get';
+        break;
+      case 'show':
+        $end_token = ':id@get';
+        break;
+      case 'new':
+        $end_token = 'new@get';
+        break;
+      case 'create':
+        $end_token = 'new@post';
+        break;
+      case 'edit':
+        $end_token = ':id/edit@get';
+        break;
+      case 'update':
+        $end_token = ':id@patch';
+        break;
+      case 'destroy':
+        $end_token = ':id@delete';
+        break;
+      default:
+        if ( strpos($action, '@') === false ) {
+          $end_token = $action . '@get';
+        } else {
+          $end_token = $action;
+        }
+        break;
+    }
+
+    return $end_token;
+  }
+
+  /**
+   * undocumented function
+   *
+   * @param  string $string
+   * @return array
+   */
+  protected function explodeTokens($string)
+  {
+    $tokens = explode('/', $string);
+    array_shift($tokens);
+
+    return $tokens;
+  }
+
+  /**
+   * undocumented function
+   *
+   * @param  array  $tokens
+   * @return string
+   */
+  protected function implodeTokens($tokens)
+  {
+    return '/' . implode('/', $tokens);
   }
 }
