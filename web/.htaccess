@@ -22,26 +22,33 @@ Header always set X-Download-Options: noopen
 Header set X-Powered-By: ""
 Header always append X-Frame-Options SAMEORIGIN
 
+###
+### [Caution] Synchronize .user.ini !!!
+###
+
 # PHP config
-# Secure Cookie
-# Session id length & bits
-php_value session.sid_length "48"
-php_value session.sid_bits_per_character "6"
-# Clear progress as soon as all POST data has been read
-php_flag session.upload_progress.cleanup on
-# Cross-site requests do not send cookies to the server
-php_value session.cookie_samesite "Strict"
-# Send cookies only through secure connections
-# If the website is only accessible via HTTPS, this setting should be enabled.
-#php_flag session.cookie_secure on
-# only use cookies for session id (anti-session-hijacking)
-php_flag session.use_cookies on
-php_flag session.use_only_cookies on
-# validity period of the cookie sent to the browser (seconds)
-php_value session.cookie_lifetime 0
-# Not accept session IDs that have not been initialized (anti-session-fixing-attack)
-php_flag session.use_strict_mode on
-# Refuse to allow session cookies to be accessed via JavaScript (anti-session-hijacking)
-php_flag session.cookie_httponly on
-# Disabling transparent session ID management (anti-session-hijacking)
-php_flag session.use_trans_sid off
+<IfModule mod_php.c>
+  SetEnv APP_ENV 'develop'
+  # Secure Cookie
+  # Session id length & bits
+  php_value session.sid_length "48"
+  php_value session.sid_bits_per_character "6"
+  # Clear progress as soon as all POST data has been read
+  php_flag session.upload_progress.cleanup on
+  # Cross-site requests do not send cookies to the server
+  php_value session.cookie_samesite "Strict"
+  # Send cookies only through secure connections
+  # If the website is only accessible via HTTPS, this setting should be enabled.
+  #php_flag session.cookie_secure on
+  # only use cookies for session id (anti-session-hijacking)
+  php_flag session.use_cookies on
+  php_flag session.use_only_cookies on
+  # validity period of the cookie sent to the browser (seconds)
+  php_value session.cookie_lifetime 0
+  # Not accept session IDs that have not been initialized (anti-session-fixing-attack)
+  php_flag session.use_strict_mode on
+  # Refuse to allow session cookies to be accessed via JavaScript (anti-session-hijacking)
+  php_flag session.cookie_httponly on
+  # Disabling transparent session ID management (anti-session-hijacking)
+  php_flag session.use_trans_sid off
+</IfModule>
