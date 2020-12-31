@@ -28,7 +28,7 @@ Header always append X-Frame-Options SAMEORIGIN
 
 # PHP config
 <IfModule mod_php.c>
-  SetEnv APP_ENV 'develop'
+  SetEnv PHP_TYPE 'module'
   # Secure Cookie
   # Session id length & bits
   php_value session.sid_length "48"
